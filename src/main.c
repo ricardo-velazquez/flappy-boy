@@ -39,7 +39,7 @@ void update() {
 
     if (is_jumping != 1) {
         scroll_sprite(0, 0, 1);
-        delay(20); 
+        delay(17); 
         if (joypad() == J_UP && button_released == 1) {
             is_jumping = 1;
             button_released = 0;
@@ -47,12 +47,13 @@ void update() {
     }
 
     if (is_jumping == 1) {
-        current_jump_acc += 2;
-        scroll_sprite(0, 0, -2);
-        delay(10);
+        current_jump_acc += 3;
+        scroll_sprite(0, 0, -3);
+        delay(5);
         if (current_jump_acc >= jump_limit) {
             is_jumping = 0;
             current_jump_acc = 0;
+            delay(30);
         } 
     }
 
