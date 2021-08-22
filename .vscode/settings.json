@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "sprites.h": "c",
+        "bkgs.h": "c",
+        "tilemap.h": "c"
+    }
+}

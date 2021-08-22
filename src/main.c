@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include "sprites.c"
 #include "bkgs.c"
-#include "tilemap.c"
+#include "tilemap.h"
 
-struct Player {
+const struct Player {
     UBYTE sprite_id;
     UINT8 x;
     UINT8 y;
@@ -51,8 +51,6 @@ void main () {
 }
 void setup() {
     // Setup Player
-
-
     set_bkg_data(0, 7, bkgs);
     set_bkg_tiles(0, 0, 40, 18, tilemap);
 
