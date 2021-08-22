@@ -5,12 +5,20 @@
 #include "bkgs.c"
 #include "tilemap.c"
 
+struct Player {
+    UBYTE sprite_id;
+    UINT8 x;
+    UINT8 y;
+    UINT8 width;
+    UINT8 height;
+};
+
+struct Player player;
 
 void setup();
-void setup_player();
+void setup_player(struct Player* player);
 void update();
-
-void move_game_object();
+void move_game_object(struct Player* obj, UINT8 x, UINT8 y);
 
 
 
@@ -22,20 +30,14 @@ INT8 button_released = 1;
 // JUMPING 1
 // SUSPENDED ON AIR 2
 INT8 state = 0;
+
 INT8 current_jump_acc = 0;
 INT8 jump_limit =25;
-
-
 UINT8 acc  = 0;
 UINT8 limit  = 1;
 
-struct player {
-    UBYTE sprite_id;
-    UINT8 x;
-    UINT8 y;
-    UINT8 width;
-    UINT8 height;
-}
+
+
 
 
 
@@ -55,7 +57,7 @@ void setup() {
     set_bkg_tiles(0, 0, 40, 18, tilemap);
 
     set_sprite_data(0, 1, sprites);
-    setup_player();
+    setup_player(&player);
     
     //set_sprite_prop(0, get_sprite_prop(0) & ~S_PRIORITY);
 //set_sprite_prop(0, S_PRIORITY);
@@ -75,8 +77,11 @@ void update() {
             wait_acc = 0;
         }
     }
-    if (state == 0) 
-        scroll_sprite(0, 0, 1);
+    if (state == 0)  {
+        // scroll_sprite(0, 0, 1);
+        move_game_object(&player, 0, 1);
+    }
+       
     
 
     if (state == 1) {
@@ -109,7 +114,7 @@ void update() {
 
 
 
-void setup_player() {
+void setup_player(struct Player* player) {
     player->sprite_id = 0;
     player->x = 40;
     player->y = 60;
@@ -119,8 +124,12 @@ void setup_player() {
     move_sprite(player->sprite_id, player->x, player->y);
 }
 
-void move_game_object(struct* obj, UINT8 x, UINT8 y) {
-    move_sprite(obj->sprite_id, obj->x + x , obj->y + y);
+
+
+void move_game_object(struct Player* obj, UINT8 x, UINT8 y) {
+    obj->x += x;
+    obj->y += y;
+    move_sprite(obj->sprite_id, obj->x , obj->y + y);
 }
 
 
