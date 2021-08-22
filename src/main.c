@@ -1,7 +1,9 @@
 #include <gb/gb.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "Export.c"
+#include "sprites.c"
+#include "bkgs.c"
+#include "tilemap.c"
 
 
 void bootstrap();
@@ -21,7 +23,7 @@ INT8 jump_limit =25;
 
 
 UINT8 acc  = 0;
-UINT8 limit  = 2;
+UINT8 limit  = 1;
 
 void main () { 
     bootstrap();
@@ -33,19 +35,35 @@ void main () {
 }
 void bootstrap() {
     // Setup Player
-    set_sprite_data(0, 4, Sprites);
+
+
+    set_bkg_data(0, 7, bkgs);
+    set_bkg_tiles(0, 0, 40, 18, tilemap);
+
+    set_sprite_data(0, 1, sprites);
     set_sprite_tile(0, 0);
     move_sprite(0, 40, 60);
+    //set_sprite_prop(0, get_sprite_prop(0) & ~S_PRIORITY);
+//set_sprite_prop(0, S_PRIORITY);
+    SHOW_BKG;
+    DISPLAY_ON;
     SHOW_SPRITES;
+
+    
 }
 void update() {
-    if (state == 0) {
-        //if (acc <= limit) {
-            scroll_sprite(0, 0, 1);
-        //    acc=0;
-        //}
-        //acc++;
+
+    if (state != 4) {
+        if (wait_acc != wait_limit) {
+            scroll_bkg(1, 0);
+            wait_acc++;
+        } else {
+            wait_acc = 0;
+        }
     }
+    if (state == 0) 
+        scroll_sprite(0, 0, 1);
+    
 
     if (state == 1) {
         current_jump_acc += 3;

@@ -1,6 +1,6 @@
 /*
 
- EXPORT.H
+ BKGS.H
 
  Include File.
 
@@ -10,7 +10,7 @@
   Compression          : None.
   Counter              : None.
   Tile size            : 8 x 8
-  Tiles                : 0 to 3
+  Tiles                : 0 to 6
 
   Palette colors       : None.
   SGB Palette          : None.
@@ -24,8 +24,8 @@
 
 
 /* Bank of tiles. */
-#define SpritesBank 0
+#define bkgsBank 0
 /* Start of tile array. */
-extern unsigned char Sprites[];
+extern unsigned char bkgs[];
 
-/* End of EXPORT.H */
+/* End of BKGS.H */
