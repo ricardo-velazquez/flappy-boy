@@ -2,6 +2,7 @@
     "files.associations": {
         "sprites.h": "c",
         "bkgs.h": "c",
-        "tilemap.h": "c"
+        "tilemap.h": "c",
+        "player.h": "c"
     }
 }

@@ -1,25 +1,33 @@
 #include <gb/gb.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "sprites.h"
-#include "bkgs.h"
-#include "tilemap.h"
+#include "resources/sprites.h"
+#include "resources/bkgs.h"
+#include "resources/tilemap.h"
 
-const struct Player {
-    UBYTE sprite_id;
+#include "entities/player.h"
+
+
+struct Player player;
+
+UINT8 last_sprite_id = 0;
+
+void setup();
+void setup_pipes();
+void update();
+void move_game_object(struct Player* obj, UINT8 x, UINT8 y);
+
+extern struct Pipe {
+    UBYTE sprite_id[4];
     UINT8 x;
     UINT8 y;
     UINT8 width;
     UINT8 height;
 };
 
-struct Player player;
+enum states {FALLING, JUMPING, JUMP_ENDED, WAITING_TO_START, DEAD};
 
-void setup();
-void setup_player(struct Player* player);
-void update();
-void move_game_object(struct Player* obj, UINT8 x, UINT8 y);
-
+enum states state;
 
 
 UINT8 wait_acc = 0;
@@ -29,15 +37,12 @@ INT8 button_released = 1;
 // FALLING 0 
 // JUMPING 1
 // SUSPENDED ON AIR 2
-INT8 state = 0;
+//INT8 state = 0;
 
 INT8 current_jump_acc = 0;
 INT8 jump_limit =25;
 UINT8 acc  = 0;
 UINT8 limit  = 1;
-
-
-
 
 
 
@@ -50,12 +55,17 @@ void main () {
     }
 }
 void setup() {
+
+    state = WAITING_TO_START;
     // Setup Player
     set_bkg_data(0, 7, bkgs);
     set_bkg_tiles(0, 0, 40, 18, tilemap);
 
-    set_sprite_data(0, 1, sprites);
-    setup_player(&player);
+    set_sprite_data(0, 4, sprites);
+    setup_player_draft(&player);
+    //setup_pipes();
+
+    
     
     //set_sprite_prop(0, get_sprite_prop(0) & ~S_PRIORITY);
 //set_sprite_prop(0, S_PRIORITY);
@@ -64,44 +74,51 @@ void setup() {
     SHOW_SPRITES;
 
     
+    
 }
 void update() {
 
-    if (state != 4) {
-        if (wait_acc != wait_limit) {
-            scroll_bkg(1, 0);
-            wait_acc++;
+
+    
+
+    if (wait_acc != wait_limit) {
+        scroll_bkg(1, 0);
+        wait_acc++;
+    } else {
+        wait_acc = 0;
+    }
+    
+
+    if (state == WAITING_TO_START) {
+        if (joypad() == J_UP){
+            state = FALLING;
         } else {
-            wait_acc = 0;
+            return;
         }
     }
-    if (state == 0)  {
-        // scroll_sprite(0, 0, 1);
+    
+    if (state == FALLING)  {
         move_game_object(&player, 0, 1);
     }
        
     
 
-    if (state == 1) {
+    if (state == JUMPING) {
         current_jump_acc += 3;
         //scroll_sprite(0, 0, -3);
         move_game_object(&player, 0, -3);
         if (current_jump_acc >= jump_limit) {
-            state = 3;
+            state = JUMP_ENDED;
             current_jump_acc = 0;
         } 
     }
 
-    if (state == 3) {
-        if (wait_acc >= wait_limit) {
-            state = 0;
-            wait_acc=0;
-        }
-        wait_acc++;
+    if (state == JUMP_ENDED && wait_acc >= wait_limit) {
+        state = FALLING;
     }
 
     if (joypad() == J_UP && button_released == 1) {
-            state = 1;
+            state = JUMPING;
             button_released = 0;
     } 
 
@@ -110,16 +127,42 @@ void update() {
     }
 }
 
+void setup_pipes(){
+
+    UINT8 sprite_id = 1;
+    UINT8 h_spaceing_between_pipes = 6;
+    UINT8 v_spaceing_between_pipes = 6;
+
+    for (UINT8 i = 1; i != (3 + 1); i++) {
+        set_sprite_tile(sprite_id, 1);
+        move_sprite(sprite_id, (8 * i * h_spaceing_between_pipes ), 8 * 10);
+        sprite_id++;
+
+        set_sprite_tile(sprite_id, 2);
+        move_sprite(sprite_id, (8 * i * h_spaceing_between_pipes), 8 * 11);
+        sprite_id++;
 
 
-void setup_player(struct Player* player) {
-    player->sprite_id = 0;
-    player->x = 40;
-    player->y = 60;
-    player->width  = 8;
-    player->height = 8;
-    set_sprite_tile(player->sprite_id, player->sprite_id);
-    move_sprite(player->sprite_id, player->x, player->y);
+        set_sprite_tile(sprite_id, 3);
+        move_sprite(sprite_id, (8 * i * h_spaceing_between_pipes), 8 * 5);
+        sprite_id++;
+
+        set_sprite_tile(sprite_id, 2);
+        move_sprite(sprite_id, (8 * i * h_spaceing_between_pipes), 8 * 4);
+        sprite_id++;
+    }
+
+
+
+
+/*
+
+    set_sprite_tile(++last_sprite_id, 1);
+    move_sprite(last_sprite_id, 8 * 10, 8 * 10);
+    set_sprite_tile(++last_sprite_id, 2);
+    move_sprite(last_sprite_id, 8 * 10, 8 * 11);
+    set_sprite_tile(++last_sprite_id, 2);
+    move_sprite(last_sprite_id, 8 * 10, 8 * 12);*/
 }
 
 
