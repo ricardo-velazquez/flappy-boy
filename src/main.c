@@ -1,8 +1,8 @@
 #include <gb/gb.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "sprites.c"
-#include "bkgs.c"
+#include "sprites.h"
+#include "bkgs.h"
 #include "tilemap.h"
 
 const struct Player {
