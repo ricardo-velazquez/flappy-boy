@@ -1,6 +1,6 @@
 #include <gb/gb.h>
 
-extern struct Pipe {
+extern const struct Pipe {
     UBYTE sprite_id[4];
     UINT8 x;
     UINT8 y;
