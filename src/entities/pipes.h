@@ -1,22 +1,18 @@
 #include <gb/gb.h>
 
-extern struct Pipe {
+extern const struct Pipe {
+    UBYTE col_pipe_id;
     UBYTE sprite_id;
     UINT8 x;
     UINT8 y;
-    UINT8 width;
-    UINT8 height;
+    //UINT8 width; The width and height are const to 8, saving memory by avoiding them
+    //UINT8 height;
 };
 
-extern struct ColumnOfPipe {
-    struct Pipe pipes[5];
-};
+void setup_pipes(struct Pipe pipes[], UBYTE sprite_ids[], UINT8 length_of_pipes_to_create);
 
-extern struct ColumnOfPipe columnsOfCol [5];
+void create_pipe(struct Pipe pipes[], UBYTE sprite_ids[]);
 
-
-UINT8 setup_pipes(UBYTE sprite_ids[]);
-
-struct ColumnOfPipe create_column_of_pipes( UBYTE sprite_ids[], UINT8 x);
+//void create_column_of_pipes(struct ColumnOPipe column, UBYTE sprite_ids[], UINT8 x);
 
 INT8 get_next_available(UBYTE sprite_ids[]);

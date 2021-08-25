@@ -1,6 +1,7 @@
 #include <gb/gb.h>
 
-extern struct Player {
+extern const struct Player {
+    UBYTE col_pipe_id;
     UBYTE sprite_id;
     UINT8 x;
     UINT8 y;
