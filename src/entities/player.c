@@ -3,7 +3,8 @@
 
 
 
-void setup_player(struct Player* player) {
+void setup_player(struct Player* player, UBYTE sprite_ids[]) {
+    sprite_ids[0] = 1;
     player->sprite_id = 0;
     player->x = 32;
     player->y = 60;

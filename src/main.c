@@ -23,8 +23,10 @@ The visible space start at (8, 16)
 const enum states {FALLING, JUMPING, JUMP_ENDED, WAITING_TO_START, DEAD};
 enum states state;
 
+UBYTE sprite_ids[40];
+
 struct Player player;
-struct PipeCol pipes[4];
+
 
 UINT8 last_sprite_id = 0;
 
@@ -59,34 +61,40 @@ void setup() {
 
     state = WAITING_TO_START;
 
+    for (INT8 i = 0; i != 40; i++)
+    {
+        sprite_ids[i] = 0;
+    }
     // Setup Player
     set_bkg_data(0, 10, bkgs);
     set_bkg_tiles(0, 0, 32, 18, tilemap);
-
     set_sprite_data(0, 4, sprites);
 
-    setup_player(&player);
+    setup_player(&player, sprite_ids);
 
-    setup_pipes(pipes, last_sprite_id);
+    setup_pipes(pipes, sprite_ids);
     
 
-    //font_set(new_font);
-
+   
     SHOW_BKG;
-    DISPLAY_ON;
     SHOW_SPRITES;
-
+    DISPLAY_ON;
     
     
 }
 void update() {
-
-    if (wait_acc != wait_limit) {
-        //scroll_bkg(1, 0);
-        wait_acc++;
-    } else {
-        wait_acc = 0;
+    for (UINT8 i = 0; i <= 5; i+= 1) {
+//pipes[i].x += -1;
+        //move_sprite(pipes[i].sprite_id, pipes[i].x, pipes[i].y);
     }
+    //if (wait_acc != wait_limit) {
+    //scroll_bkg(1, 0);
+        
+
+       /// wait_acc++;
+   // } else {
+   //     wait_acc = 0;
+  //  }
 
     if (state == WAITING_TO_START) {
         if (joypad() == J_UP){
@@ -124,8 +132,8 @@ void update() {
         button_released = 1;
     }
 
-    if (player.x + player.width > pipes[0].upper_x && player.x < pipes[0].upper_x + pipes[0].upper_width && player.y < pipes[0].upper_y && player.y > pipes[0].upper_y - pipes[0].upper_height) {
-        printf("Collision");
-    }
+//    if (player.x + player.width > pipes[0].upper_x && player.x < pipes[0].upper_x + pipes[0].upper_width && player.y < pipes[0].upper_y && player.y > pipes[0].upper_y - pipes[0].upper_height) {
+//printf("Collision");
+  //  }
 
 }

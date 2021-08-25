@@ -1,84 +1,86 @@
 #include <gb/gb.h>
+#include <stdio.h>
 #include "pipes.h"
 
-void create_column_of_pipes(struct PipeCol pipes[],  UINT8 last_sprite_id,  UINT8 type_height_col_pipe, UINT8 x) {
-    // Define the height based on the type of column we want to build 
+struct ColumnOfPipe create_column_of_col(UBYTE sprite_ids[], UINT8 x)
+{
+    // Define the height based on the type of column we want to build
+    struct Pipe pipes [6];
 
     const UINT8 v_sepration = 32;
     const UINT8 v_screen_offset = 16;
     const UINT8 h_screen_offset = 8;
 
-    UINT8 upper_pipe_limit;
-    UINT8 lower_pipe_begining;
-    UINT8 lower_pipe_limit;
-    UINT8 height;
-    switch (type_height_col_pipe)
+    UINT8 pipe_index = 0;
+
+    UINT8 upper_blank = 3;
+    UINT8 upper_count = 3;
+    UINT8 space_count = 3;
+    UINT8 lower_count = 3;
+
+    UINT8 starting_y_coor = (upper_blank * 8) + v_screen_offset;
+
+    UINT8 upper_pipe_limit = (upper_count * 8) + starting_y_coor;
+
+    for (UINT8 y = starting_y_coor; y < upper_pipe_limit; y += 8)
     {
-    case 1:
-        height = 4;
-        break;
-    case 2:
-        height = 5;
-        break;
-    case 3:
-        height = 6;
-        break; 
-    default:
-        height = 5;
-        break;
+        INT8 id = get_next_available(sprite_ids);
+        sprite_ids[id] = 1;
+        set_sprite_tile(id, (y + 8) == upper_pipe_limit ? 3 : 2);
+        move_sprite(id, x, y);
+        pipes[pipe_index].sprite_id = id;
+        pipes[pipe_index].x = x;
+        pipes[pipe_index].y = y;
+        pipes[pipe_index].width = 8;
+        pipes[pipe_index].height = 8;
+        pipe_index++;
     }
 
-    /// UPPER PIPE SETUP
+    UINT8 lower_pipe_begining = upper_pipe_limit + (space_count * 8);
+    UINT8 lower_pipe_limit = lower_pipe_begining + (lower_count * 8);
+
+    for (UINT8 j = lower_pipe_begining; j < lower_pipe_limit; j += 8)
+    {
+        INT8 id2 = get_next_available(sprite_ids);
+        sprite_ids[id2] = 1;
+        set_sprite_tile(id2, j == lower_pipe_begining ? 1 : 2);
+        move_sprite(id2, x, j);
+        pipes[pipe_index].sprite_id = id2;
+        pipes[pipe_index].x = x;
+        pipes[pipe_index].y = j;
+        pipes[pipe_index].width = 8;
+        pipes[pipe_index].height = 8;
+        pipe_index++;
+    }
+    struct ColumnOfPipe col;
     
-    upper_pipe_limit = (height * 8) + v_screen_offset;
-
-    for (UINT8 y = 16+ 24; y < upper_pipe_limit; y+=8) {
-        last_sprite_id++;
-        set_sprite_tile(last_sprite_id, 2);
-        move_sprite(last_sprite_id, x, y);
-
+    for (INT8 r =0; r!= 5 ; r++ ){
+        col.pipes[r] = pipes[r];
     }
-    last_sprite_id++;
-    set_sprite_tile(last_sprite_id, 3);
-    move_sprite(last_sprite_id, x, upper_pipe_limit);
 
-    lower_pipe_begining = upper_pipe_limit + v_sepration;
-
-    /// LOWER PIPE SETUP
-    last_sprite_id++;
-    set_sprite_tile(last_sprite_id, 1);
-    move_sprite(last_sprite_id, x, lower_pipe_begining );
-    
-     lower_pipe_limit = (16 + 144) - (8*8);
-
-   // UINT8 remaining = ((256 - (16 + (8 * height) + v_sepration)) /8) - 12;
-
-    for (UINT8 j = lower_pipe_begining + 8; j < lower_pipe_limit; j+=8) {
-        last_sprite_id++;
-        set_sprite_tile(last_sprite_id, 2);
-        move_sprite(last_sprite_id, x, j);
-    }
-  
-
-    UINT8 pipes_index =0;
-    pipes[pipes_index].upper_y = upper_pipe_limit + 8;
-    pipes[pipes_index].upper_x = x;
-    pipes[pipes_index].upper_width = 8;
-    pipes[pipes_index].upper_height = upper_pipe_limit + 8;
-
-
-    pipes[pipes_index].lower_y = lower_pipe_begining;
-    pipes[pipes_index].lower_x = x;
-    pipes[pipes_index].lower_width = 8;
-    pipes[pipes_index].lower_height = 16 + 144 -32;
-    pipes_index++;
-
+    return col;
 }
 
-void setup_pipes(struct PipeCol pipes[], UINT8 last_sprite_id){
-    for (UINT8 i = last_sprite_id; i <= (last_sprite_id + 2); i++) { 
-
-        create_column_of_pipes(pipes,  i,  1, (24 * i) + (8 * i) );
-
+INT8 get_next_available(UBYTE sprite_ids[])
+{
+    INT8 next_available = -1;
+    INT8 i;
+    for (i = 0; i != 40; i++)
+    {
+        if (sprite_ids[i] == 0)
+        {
+            next_available = i;
+            break;
+        }
     }
+    return next_available;
+}
+
+UINT8 setup_col(UBYTE sprite_ids[])
+{
+    for (UINT8 i = 1; i <= 5; i++)
+    {
+        columnsOfCol[i-1] = create_column_of_col( sprite_ids, (24 * i) + (12 * i));
+    }
+    return 0;
 }
