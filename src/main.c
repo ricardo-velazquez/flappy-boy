@@ -49,9 +49,10 @@ struct ColumnOfPipes columns[4];
 UINT8 index_col_pipes = 0;
 
 // Game logic vars
-INT8 button_released = 1;
+const UINT8 JUMP_SPEED = 4;
+bool button_released = true;
 INT8 current_jump_acc = 0;
-INT8 jump_limit = 15;
+const INT8 jump_limit = 15;
 UINT8 acc = 0;
 const UINT8 limit = 1;
 UINT8 wait_acc = 0;
@@ -99,17 +100,15 @@ void setup()
     state = WAITING_TO_START;
 
     // Setup Background
-    set_bkg_data(0, 10, bkgs);
+    set_bkg_data(0, 21, bkgs);
     set_bkg_tiles(0, 0, 32, 18, tilemap);
+    
 
     // Load Sprites
     set_sprite_data(0, 4, sprites);
 
     setup_player(&player, sprite_ids);
 
-    // create_pipe(160 + 56+ 56);
-    //  create_pipe(160 + 56+ 56+ 56);
-    //create_pipe(160 + 56+ 56+ 56+ 56);
     UINT8 count = 0;
     for (UINT8 q = 0; q != 40; q++)
     {
@@ -118,11 +117,19 @@ void setup()
             count++;
         }
     }
+    //set_win_data(0, 21, bkgs);
+    set_win_tile_xy(1, 0, 13);
+    set_win_tile_xy(1, 1, 10);
+    set_win_tile_xy(2, 1, 11);
+    set_win_tile_xy(3, 1, 20);
+    set_win_tile_xy(4, 1, 12);
+    move_win(8, 120);
 
-    printf("count: %d", count);
+    //printf("count: %d", count);
 
     SHOW_BKG;
     SHOW_SPRITES;
+    SHOW_WIN;
     DISPLAY_ON;
 }
 bool create_new_one = false;
@@ -171,9 +178,9 @@ void update()
 
     if (state == JUMPING)
     {
-        current_jump_acc += 4;
+        current_jump_acc += JUMP_SPEED;
         //scroll_sprite(0, 0, -3);
-        move_game_object(&player, 0, -4);
+        move_game_object(&player, 0, -JUMP_SPEED);
         if (current_jump_acc >= jump_limit)
         {
             state = FALLING;
@@ -181,15 +188,15 @@ void update()
         }
     }
 
-    if (joypad() == J_UP && button_released == 1 && state == FALLING)
+    if (joypad() == J_UP && button_released == true && state == FALLING)
     {
         state = JUMPING;
-        button_released = 0;
+        button_released = false;
     }
 
     if (joypad() != J_UP)
     {
-        button_released = 1;
+        button_released = true;
     }
 
     if (state == WAITING_TO_START)
@@ -210,37 +217,6 @@ void update()
     {
         move_game_object(&player, 0, 1);
     }
-
-
-/*
-    if (state == JUMPING)
-    {
-        current_jump_acc += 3;
-        //scroll_sprite(0, 0, -3);
-        move_game_object(&player, 0, -3);
-        if (current_jump_acc >= jump_limit)
-        {
-            state = JUMP_ENDED;
-            current_jump_acc = 0;
-        }
-    }
-
-    if (state == JUMP_ENDED && wait_acc >= wait_limit)
-    {
-        state = FALLING;
-    }
-
-
-
-    if (joypad() != J_UP)
-    {
-        //printf("x: %d, y: %d", player.x, player.y);
-        button_released = 1;
-    }*/
-
-    //    if (player.x + player.width > pipes[0].upper_x && player.x < pipes[0].upper_x + pipes[0].upper_width && player.y < pipes[0].upper_y && player.y > pipes[0].upper_y - pipes[0].upper_height) {
-    //printf("Collision");
-    //  }
 
 
     if (joypad() == J_A)
