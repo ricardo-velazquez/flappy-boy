@@ -152,12 +152,20 @@ void update()
         }
     }
 
-    if (state != WAITING_TO_START)
+    if (state != WAITING_TO_START && state != DEAD) 
     {
         for (UINT8 i = 0; i != num_pipe_cols; i++)
         {
             for (UINT8 j = 0; j != 6; j++)
             {
+                // Check for colissions
+
+                if (player.x + 7 > columns[i].pipes[j].x && player.x < columns[i].pipes[j].x + 7 && player.y < columns[i].pipes[j].y && player.y > columns[i].pipes[j].y - 8) {
+                    printf("Collision");
+                 }
+
+
+                // Move active columns
                 if (columns[i].is_created == true)
                 {
                     columns[i].pipes[j].x += -1;
@@ -174,6 +182,10 @@ void update()
             }
         }
         scroll_bkg(1, 0);
+    }
+
+    if (state == FALLING && player.y > 88) { 
+        state = DEAD;
     }
 
     if (state == JUMPING)
