@@ -25,6 +25,8 @@ const enum states { FALLING,
                     DEAD };
 enum states state;
 
+UINT8 score = 0;
+
 bool sprite_ids[40];
 const UINT8 num_pipe_cols = 4;
 // GameObjects declaration
@@ -42,6 +44,7 @@ struct Pipe
 struct ColumnOfPipes
 {
     bool is_created;
+    bool is_scored;
     struct Pipe pipes[6];
 };
 
@@ -95,12 +98,13 @@ void setup()
     for (UINT8 j = 0; j != num_pipe_cols; j++)
     {
         columns[j].is_created = false;
+        columns[j].is_scored  = false;
     }
 
     state = WAITING_TO_START;
 
     // Setup Background
-    set_bkg_data(0, 21, bkgs);
+    set_bkg_data(0, 22, bkgs);
     set_bkg_tiles(0, 0, 32, 18, tilemap);
     
 
@@ -119,10 +123,10 @@ void setup()
     }
     //set_win_data(0, 21, bkgs);
     set_win_tile_xy(1, 0, 13);
-    set_win_tile_xy(1, 1, 10);
-    set_win_tile_xy(2, 1, 11);
-    set_win_tile_xy(3, 1, 20);
-    set_win_tile_xy(4, 1, 12);
+    //set_win_tile_xy(1, 1, 10);
+    //set_win_tile_xy(2, 1, 11);
+    //set_win_tile_xy(3, 1, 20);
+//set_win_tile_xy(4, 1, 12);
     move_win(8, 120);
 
     //printf("count: %d", count);
@@ -135,6 +139,10 @@ void setup()
 bool create_new_one = false;
 void update()
 {
+
+    set_win_tile_xy(1, 0, 12 + score);
+
+
     if (state != WAITING_TO_START)
     {
         if (step_counter == step_limit)
@@ -161,8 +169,8 @@ void update()
                 // Check for colissions
 
                 if (player.x + 7 > columns[i].pipes[j].x && player.x < columns[i].pipes[j].x + 7 && player.y < columns[i].pipes[j].y && player.y > columns[i].pipes[j].y - 8) {
-                    printf("Collision");
-                 }
+                   // printf("Collision");
+                }
 
 
                 // Move active columns
@@ -172,9 +180,17 @@ void update()
                     move_sprite(columns[i].pipes[j].sprite_id, columns[i].pipes[j].x, columns[i].pipes[j].y);
                 }
             }
+
+            if (columns[i].is_scored == false && player.x - 4  > columns[i].pipes[0].x) // Not visible
+            {
+                columns[i].is_scored = true;
+                score += 1;
+            }
+
             if (columns[i].pipes[0].x == 0) // Not visible
             {
                 columns[i].is_created = false;
+                
                 for (UINT8 j = 0; j != 6; j++)
                 {
                     sprite_ids[columns[i].pipes[j].sprite_id] = false;
@@ -290,6 +306,7 @@ void create_pipe(UINT8 index, UINT8 x)
         pipe_count++;
     }
     columns[index].is_created = true;
+    columns[index].is_scored = false;
     index_col_pipes++;
 }
 
