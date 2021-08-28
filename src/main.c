@@ -9,6 +9,7 @@
 #include "res/tilemap.h"
 
 #include "entities/player.h"
+#include "utils.c"
 //#include "entities/pipes.h"
 
 /*
@@ -25,7 +26,7 @@ const enum states { FALLING,
                     DEAD };
 enum states state;
 
-UINT8 score = 0;
+UINT8 score[4];
 
 bool sprite_ids[40];
 const UINT8 num_pipe_cols = 4;
@@ -87,6 +88,29 @@ void perform_deplay(UINT8 times)
     }
 }
 
+void setup_win(){
+    set_win_tile_xy(1, 2, 22);
+    set_win_tile_xy(2, 2, 23);
+    set_win_tile_xy(3, 2, 24);
+
+    // window of text
+    // Left side
+    set_win_tile_xy(0, 0, 32);
+    set_win_tile_xy(0, 1, 30);
+    set_win_tile_xy(0, 2, 30);
+    set_win_tile_xy(0, 3, 34);
+    // Right side
+    set_win_tile_xy(19, 0, 33);
+    set_win_tile_xy(19, 1, 31);
+    set_win_tile_xy(19, 2, 31);
+    set_win_tile_xy(19, 3, 35);
+
+    for (UINT8 i = 1; i <= 18; i++) { 
+        set_win_tile_xy(i, 0, 37);
+        set_win_tile_xy(19-i, 3, 36);
+    }
+}
+
 void setup()
 {
     // Init sprite ids array
@@ -100,11 +124,15 @@ void setup()
         columns[j].is_created = false;
         columns[j].is_scored  = false;
     }
+    for (UINT8 r = 0; r != 4; r++)
+    {
+        score[r] = 0;
+    }
 
     state = WAITING_TO_START;
 
     // Setup Background
-    set_bkg_data(0, 22, bkgs);
+    set_bkg_data(0, 38, bkgs);
     set_bkg_tiles(0, 0, 32, 18, tilemap);
     
 
@@ -112,7 +140,7 @@ void setup()
     set_sprite_data(0, 4, sprites);
 
     setup_player(&player, sprite_ids);
-
+    setup_win();
     UINT8 count = 0;
     for (UINT8 q = 0; q != 40; q++)
     {
@@ -122,12 +150,12 @@ void setup()
         }
     }
     //set_win_data(0, 21, bkgs);
-    set_win_tile_xy(1, 0, 13);
+    //set_win_tile_xy(1, 0, 13);
     //set_win_tile_xy(1, 1, 10);
     //set_win_tile_xy(2, 1, 11);
     //set_win_tile_xy(3, 1, 20);
-//set_win_tile_xy(4, 1, 12);
-    move_win(8, 120);
+
+    move_win(8, 120-8);
 
     //printf("count: %d", count);
 
@@ -137,10 +165,38 @@ void setup()
     DISPLAY_ON;
 }
 bool create_new_one = false;
+
+void update_dispaly_score() {
+    for (UINT8 i = 0; i != 4; i++)
+    {
+        set_win_tile_xy((i+1), 1, 12 + score[(4-i-1)]);
+    }
+
+   
+
+}
+
+void add_score() {
+    for (UINT8 i = 0; i != 4; i++)
+    {
+        if (score[i] < 9) 
+        { 
+            score[i] += 1;
+            break;
+        }
+        if (score[i] == 9) 
+        { 
+            score[i + 1] += 1;
+            score[i] = 0;
+            break;
+        }
+    }
+}
+
 void update()
 {
 
-    set_win_tile_xy(1, 0, 12 + score);
+     update_dispaly_score();
 
 
     if (state != WAITING_TO_START)
@@ -181,10 +237,10 @@ void update()
                 }
             }
 
-            if (columns[i].is_scored == false && player.x - 4  > columns[i].pipes[0].x) // Not visible
+            if (columns[i].is_scored == false && columns[i].is_created == true  && player.x - 4  > columns[i].pipes[0].x) // Not visible
             {
                 columns[i].is_scored = true;
-                score += 1;
+                add_score();
             }
 
             if (columns[i].pipes[0].x == 0) // Not visible
@@ -269,9 +325,9 @@ const UINT8 h_screen_offset = 8;
 void create_pipe(UINT8 index, UINT8 x)
 {
     UINT8 upper_blank = 0;
-    UINT8 upper_count = 3;
+    UINT8 upper_count = random_range(1, 6);
     UINT8 space_count = 4;
-    UINT8 lower_count = 3;
+    UINT8 lower_count =  10 - upper_count - space_count - upper_blank;
 
     UINT8 starting_y_coor = (upper_blank * 8) + v_screen_offset;
 
