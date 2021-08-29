@@ -10,6 +10,9 @@
 
 #include "entities/player.h"
 #include "utils.c"
+#include "gb_helpers.h"
+#include "win_layer_panel.c"
+#include "macros.h"
 //#include "entities/pipes.h"
 
 /*
@@ -31,7 +34,7 @@ UINT8 high_score[4];
 extern UBYTE session_highscore[4];
 extern UBYTE session[1];
 
-bool sprite_ids[40];
+bool sprite_ids[SPRITE_LIMIT];
 const UINT8 num_pipe_cols = 4;
 // GameObjects declaration
 struct Player player;
@@ -68,7 +71,6 @@ UINT8 last_sprite_id = 0;
 
 void setup();
 void update();
-void perform_deplay(UINT8 times);
 void create_pipe(UINT8 index, UINT8 x);
 INT8 get_next_available();
 INT8 get_next_slot_col_pipe_available();
@@ -80,70 +82,31 @@ void main()
     while (1)
     {
         update();
-        perform_deplay(2);
+        perform_delay(2);
     }
     DISABLE_RAM_MBC1;
 }
 
-void perform_deplay(UINT8 times)
-{
-    for (UINT8 i = 0; i < times; i++)
-    {
-        wait_vbl_done();
-    }
-}
 
-void setup_win()
-{
-    move_win(8, 120 - 8);
 
-    // High score label
-    set_win_tile_xy(1, 2, 22);
-    set_win_tile_xy(2, 2, 23);
-    set_win_tile_xy(3, 2, 24);
-    // High score value
-    for (UINT8 i = 0; i != 4; i++)
-    {
-        //printf("%d", session_highscore[i]);
-        set_win_tile_xy(3 + (i + 1), 2, 12 + session_highscore[(4 - i - 1)]);
-    }
-
-    // window of text
-    // Left side
-    set_win_tile_xy(0, 0, 32);
-    set_win_tile_xy(0, 1, 30);
-    set_win_tile_xy(0, 2, 30);
-    set_win_tile_xy(0, 3, 34);
-    // Right side
-    set_win_tile_xy(19, 0, 33);
-    set_win_tile_xy(19, 1, 31);
-    set_win_tile_xy(19, 2, 31);
-    set_win_tile_xy(19, 3, 35);
-
-    for (UINT8 j = 1; j <= 18; j++)
-    {
-        set_win_tile_xy(j, 0, 37);
-        set_win_tile_xy(19 - j, 3, 36);
-    }
-}
 
 void setup()
 {
     // Init sprite ids array
-    for (UINT8 i = 0; i != 40; i++)
+    FOR_FROM_ZERO_TO(40)
     {
         sprite_ids[i] = false;
     }
 
-    for (UINT8 j = 0; j != num_pipe_cols; j++)
+    FOR_FROM_ZERO_TO(num_pipe_cols)
     {
-        columns[j].is_created = false;
-        columns[j].is_scored = false;
+        columns[i].is_created = false;
+        columns[i].is_scored = false;
     }
-    for (UINT8 r = 0; r != 4; r++)
+    FOR_FROM_ZERO_TO(4)
     {
-        score[r] = 0;
-        high_score[r] = 0;
+        score[i] = 0;
+        high_score[i] = 0;
     }
 
     if (session[0] != 's')
@@ -166,28 +129,8 @@ void setup()
     set_sprite_data(0, 4, sprites);
 
     setup_player(&player, sprite_ids);
-    setup_win();
-    UINT8 count = 0;
-    for (UINT8 q = 0; q != 40; q++)
-    {
-        if (sprite_ids[q] == true)
-        {
-            count++;
-        }
-    }
-    // Enable RAM
+    setup_win(session_highscore);
 
-    //printf("pre: %d \n", session_highscore[0]);
-    //ENABLE_RAM_MBC1;
-
-    // RAMPtr = (UBYTE *)0xa000;
-
-    //printf("Hex number -> 0x%x", RAMPtr[0]);
-    //printf("pre: %d \n", RAMPtr[0]);
-    //  RAMPtr[0]++;
-    //printf("post: %d \n", RAMPtr[0]);
-
-    //DISABLE_RAM_MBC1;
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -196,36 +139,13 @@ void setup()
 }
 bool create_new_one = false;
 
-void update_dispaly_score()
-{
-    for (UINT8 i = 0; i != 4; i++)
-    {
-        set_win_tile_xy((i + 1), 1, 12 + score[(4 - i - 1)]);
-    }
-}
 
-void add_score()
-{
-    for (UINT8 i = 0; i != 4; i++)
-    {
-        if (score[i] < 9)
-        {
-            score[i] += 1;
-            break;
-        }
-        if (score[i] == 9)
-        {
-            score[i + 1] += 1;
-            score[i] = 0;
-            break;
-        }
-    }
-}
+
 
 void update()
 {
 
-    update_dispaly_score();
+    update_display_score(score);
 
     if (state != WAITING_TO_START)
     {
@@ -268,7 +188,7 @@ void update()
             if (columns[i].is_scored == false && columns[i].is_created == true && player.x - 4 > columns[i].pipes[0].x) // Not visible
             {
                 columns[i].is_scored = true;
-                add_score();
+                add_score(score);
             }
 
             if (columns[i].pipes[0].x == 0) // Not visible
@@ -288,11 +208,9 @@ void update()
     {
         state = DEAD;
 
-        //ENABLE_RAM_MBC1; // Enable RAM
+        if (session_highscore[0] > score[0])
+            session_highscore[0] = score[0];
 
-        session_highscore[0] = score[0];
-
-        //DISABLE_RAM_MBC1;
     }
 
     if (state == JUMPING)
@@ -335,19 +253,6 @@ void update()
         move_game_object(&player, 0, 1);
     }
 
-    if (joypad() == J_A)
-    {
-        UINT8 count = 0;
-        for (UINT8 q = 0; q != 40; q++)
-        {
-            if (sprite_ids[q] == true)
-            {
-                count++;
-            }
-        }
-
-        printf("count: %d", count);
-    }
 }
 
 const UINT8 v_sepration = 32;
