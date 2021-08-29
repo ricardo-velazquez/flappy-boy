@@ -27,6 +27,9 @@ const enum states { FALLING,
 enum states state;
 
 UINT8 score[4];
+UINT8 high_score[4];
+extern UBYTE session_highscore[4];
+extern UBYTE session[1];
 
 bool sprite_ids[40];
 const UINT8 num_pipe_cols = 4;
@@ -72,12 +75,14 @@ INT8 get_next_slot_col_pipe_available();
 
 void main()
 {
+    ENABLE_RAM_MBC1;
     setup();
     while (1)
     {
         update();
         perform_deplay(2);
     }
+    DISABLE_RAM_MBC1;
 }
 
 void perform_deplay(UINT8 times)
@@ -88,10 +93,20 @@ void perform_deplay(UINT8 times)
     }
 }
 
-void setup_win(){
+void setup_win()
+{
+    move_win(8, 120 - 8);
+
+    // High score label
     set_win_tile_xy(1, 2, 22);
     set_win_tile_xy(2, 2, 23);
     set_win_tile_xy(3, 2, 24);
+    // High score value
+    for (UINT8 i = 0; i != 4; i++)
+    {
+        //printf("%d", session_highscore[i]);
+        set_win_tile_xy(3 + (i + 1), 2, 12 + session_highscore[(4 - i - 1)]);
+    }
 
     // window of text
     // Left side
@@ -105,9 +120,10 @@ void setup_win(){
     set_win_tile_xy(19, 2, 31);
     set_win_tile_xy(19, 3, 35);
 
-    for (UINT8 i = 1; i <= 18; i++) { 
-        set_win_tile_xy(i, 0, 37);
-        set_win_tile_xy(19-i, 3, 36);
+    for (UINT8 j = 1; j <= 18; j++)
+    {
+        set_win_tile_xy(j, 0, 37);
+        set_win_tile_xy(19 - j, 3, 36);
     }
 }
 
@@ -122,11 +138,22 @@ void setup()
     for (UINT8 j = 0; j != num_pipe_cols; j++)
     {
         columns[j].is_created = false;
-        columns[j].is_scored  = false;
+        columns[j].is_scored = false;
     }
     for (UINT8 r = 0; r != 4; r++)
     {
         score[r] = 0;
+        high_score[r] = 0;
+    }
+
+    if (session[0] != 's')
+    {
+        for (UINT8 w = 0; w != 4; w++)
+        {
+            session_highscore[w] = 0;
+        }                 // Check to see if the variable's ever been saved before
+                          // Assign the variable an initial value
+        session[0] = 's'; // Assign saved an 's' value so the if statement isn't executed on next load
     }
 
     state = WAITING_TO_START;
@@ -134,7 +161,6 @@ void setup()
     // Setup Background
     set_bkg_data(0, 38, bkgs);
     set_bkg_tiles(0, 0, 32, 18, tilemap);
-    
 
     // Load Sprites
     set_sprite_data(0, 4, sprites);
@@ -149,15 +175,19 @@ void setup()
             count++;
         }
     }
-    //set_win_data(0, 21, bkgs);
-    //set_win_tile_xy(1, 0, 13);
-    //set_win_tile_xy(1, 1, 10);
-    //set_win_tile_xy(2, 1, 11);
-    //set_win_tile_xy(3, 1, 20);
+    // Enable RAM
 
-    move_win(8, 120-8);
+    //printf("pre: %d \n", session_highscore[0]);
+    //ENABLE_RAM_MBC1;
 
-    //printf("count: %d", count);
+    // RAMPtr = (UBYTE *)0xa000;
+
+    //printf("Hex number -> 0x%x", RAMPtr[0]);
+    //printf("pre: %d \n", RAMPtr[0]);
+    //  RAMPtr[0]++;
+    //printf("post: %d \n", RAMPtr[0]);
+
+    //DISABLE_RAM_MBC1;
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -166,26 +196,25 @@ void setup()
 }
 bool create_new_one = false;
 
-void update_dispaly_score() {
+void update_dispaly_score()
+{
     for (UINT8 i = 0; i != 4; i++)
     {
-        set_win_tile_xy((i+1), 1, 12 + score[(4-i-1)]);
+        set_win_tile_xy((i + 1), 1, 12 + score[(4 - i - 1)]);
     }
-
-   
-
 }
 
-void add_score() {
+void add_score()
+{
     for (UINT8 i = 0; i != 4; i++)
     {
-        if (score[i] < 9) 
-        { 
+        if (score[i] < 9)
+        {
             score[i] += 1;
             break;
         }
-        if (score[i] == 9) 
-        { 
+        if (score[i] == 9)
+        {
             score[i + 1] += 1;
             score[i] = 0;
             break;
@@ -196,8 +225,7 @@ void add_score() {
 void update()
 {
 
-     update_dispaly_score();
-
+    update_dispaly_score();
 
     if (state != WAITING_TO_START)
     {
@@ -216,7 +244,7 @@ void update()
         }
     }
 
-    if (state != WAITING_TO_START && state != DEAD) 
+    if (state != WAITING_TO_START && state != DEAD)
     {
         for (UINT8 i = 0; i != num_pipe_cols; i++)
         {
@@ -224,10 +252,10 @@ void update()
             {
                 // Check for colissions
 
-                if (player.x + 7 > columns[i].pipes[j].x && player.x < columns[i].pipes[j].x + 7 && player.y < columns[i].pipes[j].y && player.y > columns[i].pipes[j].y - 8) {
-                   // printf("Collision");
+                if (player.x + 7 > columns[i].pipes[j].x && player.x < columns[i].pipes[j].x + 7 && player.y < columns[i].pipes[j].y && player.y > columns[i].pipes[j].y - 8)
+                {
+                    // printf("Collision");
                 }
-
 
                 // Move active columns
                 if (columns[i].is_created == true)
@@ -237,7 +265,7 @@ void update()
                 }
             }
 
-            if (columns[i].is_scored == false && columns[i].is_created == true  && player.x - 4  > columns[i].pipes[0].x) // Not visible
+            if (columns[i].is_scored == false && columns[i].is_created == true && player.x - 4 > columns[i].pipes[0].x) // Not visible
             {
                 columns[i].is_scored = true;
                 add_score();
@@ -246,7 +274,7 @@ void update()
             if (columns[i].pipes[0].x == 0) // Not visible
             {
                 columns[i].is_created = false;
-                
+
                 for (UINT8 j = 0; j != 6; j++)
                 {
                     sprite_ids[columns[i].pipes[j].sprite_id] = false;
@@ -256,8 +284,15 @@ void update()
         scroll_bkg(1, 0);
     }
 
-    if (state == FALLING && player.y > 88) { 
+    if (state == FALLING && player.y > 88)
+    {
         state = DEAD;
+
+        //ENABLE_RAM_MBC1; // Enable RAM
+
+        session_highscore[0] = score[0];
+
+        //DISABLE_RAM_MBC1;
     }
 
     if (state == JUMPING)
@@ -295,13 +330,10 @@ void update()
         }
     }
 
-
-
     if (state == FALLING)
     {
         move_game_object(&player, 0, 1);
     }
-
 
     if (joypad() == J_A)
     {
@@ -327,7 +359,7 @@ void create_pipe(UINT8 index, UINT8 x)
     UINT8 upper_blank = 0;
     UINT8 upper_count = random_range(1, 6);
     UINT8 space_count = 4;
-    UINT8 lower_count =  10 - upper_count - space_count - upper_blank;
+    UINT8 lower_count = 10 - upper_count - space_count - upper_blank;
 
     UINT8 starting_y_coor = (upper_blank * 8) + v_screen_offset;
 
