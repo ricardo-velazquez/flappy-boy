@@ -1,4 +1,4 @@
 #include <gb/gb.h>
 
-UBYTE session_highscore[4];
+UINT8 session_highscore[4];
 UBYTE session[1];

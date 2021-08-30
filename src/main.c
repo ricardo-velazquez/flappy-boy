@@ -11,7 +11,7 @@
 #include "entities/player.h"
 #include "utils.c"
 #include "gb_helpers.h"
-#include "win_layer_panel.c"
+//#include "win_layer_panel.c"
 #include "macros.h"
 //#include "entities/pipes.h"
 
@@ -22,6 +22,10 @@ The visible space start at (8, 16)
 
 */
 
+
+extern UINT8 session_highscore[4];
+extern UBYTE session[1];
+
 const enum states { FALLING,
                     JUMPING,
                     JUMP_ENDED,
@@ -30,16 +34,15 @@ const enum states { FALLING,
 enum states state;
 
 UINT8 score[4];
-UINT8 high_score[4];
-extern UBYTE session_highscore[4];
-extern UBYTE session[1];
+
+
 
 bool sprite_ids[SPRITE_LIMIT];
 const UINT8 num_pipe_cols = 4;
 // GameObjects declaration
 struct Player player;
-const UINT16 step_limit = 50;
-UINT16 step_counter = 50;
+const UINT16 step_limit = 45;
+UINT16 step_counter = 45;
 
 struct Pipe
 {
@@ -74,6 +77,67 @@ void update();
 void create_pipe(UINT8 index, UINT8 x);
 INT8 get_next_available();
 INT8 get_next_slot_col_pipe_available();
+void move_game_object(UINT8 x, UINT8 y);
+void setup_player();
+
+UINT16 get_raw_score_from_array(UINT8 score[]);
+
+void setup_win()
+{
+    move_win(8, 120 - 8);
+
+    // High score label
+    set_win_tile_xy(1, 2, 22);
+    set_win_tile_xy(2, 2, 23);
+    set_win_tile_xy(3, 2, 24);
+    // High score value
+    FOR_FROM_ZERO_TO(4)
+        set_win_tile_xy(3 + (i + 1), 2, 12 + session_highscore[(4 - i - 1)]);
+
+
+    // window of text
+    // Left side
+    set_win_tile_xy(0, 0, 32);
+    set_win_tile_xy(0, 1, 30);
+    set_win_tile_xy(0, 2, 30);
+    set_win_tile_xy(0, 3, 34);
+    // Right side
+    set_win_tile_xy(19, 0, 33);
+    set_win_tile_xy(19, 1, 31);
+    set_win_tile_xy(19, 2, 31);
+    set_win_tile_xy(19, 3, 35);
+
+    FOR(1, 19)
+    {
+        set_win_tile_xy(i, 0, 37);
+        set_win_tile_xy(19 - i, 3, 36);
+    }
+}
+
+
+void update_display_score()
+{
+    FOR_FROM_ZERO_TO(4) set_win_tile_xy((i + 1), 1, 12 + score[(4 - i - 1)]);
+}
+
+void add_score()
+{
+    for (UINT8 i = 0; i != 4; i++)
+    {
+        if (score[i] < 9) 
+        { 
+            score[i] += 1;
+            break;
+        }
+        if (score[i] == 9) 
+        { 
+            score[i + 1] += 1;
+            score[i] = 0;
+            break;
+        }
+    }
+
+}
 
 void main()
 {
@@ -87,26 +151,20 @@ void main()
     DISABLE_RAM_MBC1;
 }
 
-
-
-
 void setup()
 {
     // Init sprite ids array
-    FOR_FROM_ZERO_TO(40)
-    {
-        sprite_ids[i] = false;
-    }
+    FOR_FROM_ZERO_TO(40) sprite_ids[i] = false;
 
     FOR_FROM_ZERO_TO(num_pipe_cols)
     {
         columns[i].is_created = false;
         columns[i].is_scored = false;
     }
-    FOR_FROM_ZERO_TO(4)
-    {
-        score[i] = 0;
-        high_score[i] = 0;
+
+        for (UINT8 r = 0; r != 4; r++) 
+    {score[r] = 0;
+   // printf("%d: %d\n",r, score[r] );
     }
 
     if (session[0] != 's')
@@ -128,9 +186,10 @@ void setup()
     // Load Sprites
     set_sprite_data(0, 4, sprites);
 
-    setup_player(&player, sprite_ids);
-    setup_win(session_highscore);
+    setup_player();
 
+
+    setup_win();
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -139,13 +198,10 @@ void setup()
 }
 bool create_new_one = false;
 
-
-
-
 void update()
 {
 
-    update_display_score(score);
+    update_display_score();
 
     if (state != WAITING_TO_START)
     {
@@ -166,15 +222,23 @@ void update()
 
     if (state != WAITING_TO_START && state != DEAD)
     {
-        for (UINT8 i = 0; i != num_pipe_cols; i++)
+        FOR_I(0, num_pipe_cols)
         {
-            for (UINT8 j = 0; j != 6; j++)
+            FOR_J(0, 6)
             {
                 // Check for colissions
 
-                if (player.x + 7 > columns[i].pipes[j].x && player.x < columns[i].pipes[j].x + 7 && player.y < columns[i].pipes[j].y && player.y > columns[i].pipes[j].y - 8)
+                if (player.x + 7 > columns[i].pipes[j].x && player.x < columns[i].pipes[j].x + 7 && player.y < columns[i].pipes[j].y + 8 && player.y > columns[i].pipes[j].y - 8)
                 {
-                    // printf("Collision");
+                    state = DEAD;
+                    UINT16 raw_current_score = get_raw_score_from_array(score);
+                    UINT16 raw_highscore = get_raw_score_from_array(session_highscore);
+                    if (raw_current_score > raw_highscore)
+                    {
+                        FOR_FROM_ZERO_TO(4)
+                        session_highscore[i] = score[i];
+                    }
+                    break;
                 }
 
                 // Move active columns
@@ -188,7 +252,7 @@ void update()
             if (columns[i].is_scored == false && columns[i].is_created == true && player.x - 4 > columns[i].pipes[0].x) // Not visible
             {
                 columns[i].is_scored = true;
-                add_score(score);
+                add_score();
             }
 
             if (columns[i].pipes[0].x == 0) // Not visible
@@ -208,16 +272,20 @@ void update()
     {
         state = DEAD;
 
-        if (session_highscore[0] > score[0])
-            session_highscore[0] = score[0];
-
+        UINT16 raw_current_score = get_raw_score_from_array(score);
+        UINT16 raw_highscore = get_raw_score_from_array(session_highscore);
+        if (raw_current_score > raw_highscore)
+        {
+            FOR_FROM_ZERO_TO(4)
+            session_highscore[i] = score[i];
+        }
     }
 
     if (state == JUMPING)
     {
         current_jump_acc += JUMP_SPEED;
         //scroll_sprite(0, 0, -3);
-        move_game_object(&player, 0, -JUMP_SPEED);
+        move_game_object( 0, -JUMP_SPEED);
         if (current_jump_acc >= jump_limit)
         {
             state = FALLING;
@@ -250,9 +318,13 @@ void update()
 
     if (state == FALLING)
     {
-        move_game_object(&player, 0, 1);
+        move_game_object( 0, 1);
     }
 
+     if (joypad() == J_A)
+        {
+            printf("id: %d\n", player.sprite_id);
+        }
 }
 
 const UINT8 v_sepration = 32;
@@ -306,8 +378,8 @@ void create_pipe(UINT8 index, UINT8 x)
 INT8 get_next_available()
 {
     INT8 next_available = -1;
-    INT8 i;
-    for (i = 0; i != 40; i++)
+
+    FOR(1, 40)
     {
         if (sprite_ids[i] == false)
         {
@@ -321,8 +393,8 @@ INT8 get_next_available()
 INT8 get_next_slot_col_pipe_available()
 {
     INT8 next_available = -1;
-    INT8 i;
-    for (i = 0; i != num_pipe_cols; i++)
+
+    FOR_FROM_ZERO_TO(num_pipe_cols)
     {
         if (columns[i].is_created == false)
         {
@@ -331,4 +403,31 @@ INT8 get_next_slot_col_pipe_available()
         }
     }
     return next_available;
+}
+
+UINT16 get_raw_score_from_array(UINT8 score[])
+{
+    UINT16 acc = 0;
+    acc += score[0];
+    acc += score[1] * 10;
+    acc += score[2] * 100;
+    acc += score[3] * 1000;
+    return acc;
+}
+
+void move_game_object( UINT8 x, UINT8 y) {
+    player.x += x;
+    player.y += y;
+    move_sprite(player.sprite_id, player.x + x, player.y + y);
+}
+
+void setup_player() {
+    sprite_ids[0] = true;
+    player.sprite_id = 0;
+    player.x = 32;
+    player.y = 60;
+    player.width  = 8;
+    player.height = 8;
+    set_sprite_tile(player.sprite_id, player.sprite_id);
+    move_sprite(player.sprite_id, player.x, player.y);
 }

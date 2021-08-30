@@ -8,6 +8,4 @@ extern const struct Player {
     UINT8 height;
 };
 
-void setup_player(struct Player* player, UBYTE sprite_ids[]);
 
-void move_game_object(struct Player* obj, UINT8 x, UINT8 y);
