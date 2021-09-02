@@ -12,7 +12,7 @@
 
 // Tooling
 #include "macros.h"
-#include "tooling/utils.c"
+#include "utils.c"
 // Modules
 #include "win_layer_funcs.c"
 #include "score_funcs.c"
