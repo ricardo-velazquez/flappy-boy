@@ -11,8 +11,9 @@
 #include "entities/player.h"
 #include "utils.c"
 #include "gb_helpers.h"
-//#include "win_layer_panel.c"
+#include "win_layer_panel.c"
 #include "macros.h"
+#include <gb/drawing.h>
 //#include "entities/pipes.h"
 
 /*
@@ -21,7 +22,7 @@ There are a total of 32 tiles (8x8 pixels) in the with of the map.
 The visible space start at (8, 16)
 
 */
-
+bool is_playing = true;
 
 extern UINT8 session_highscore[4];
 extern UBYTE session[1];
@@ -82,37 +83,7 @@ void setup_player();
 
 UINT16 get_raw_score_from_array(UINT8 score[]);
 
-void setup_win()
-{
-    move_win(8, 120 - 8);
 
-    // High score label
-    set_win_tile_xy(1, 2, 22);
-    set_win_tile_xy(2, 2, 23);
-    set_win_tile_xy(3, 2, 24);
-    // High score value
-    FOR_FROM_ZERO_TO(4)
-        set_win_tile_xy(3 + (i + 1), 2, 12 + session_highscore[(4 - i - 1)]);
-
-
-    // window of text
-    // Left side
-    set_win_tile_xy(0, 0, 32);
-    set_win_tile_xy(0, 1, 30);
-    set_win_tile_xy(0, 2, 30);
-    set_win_tile_xy(0, 3, 34);
-    // Right side
-    set_win_tile_xy(19, 0, 33);
-    set_win_tile_xy(19, 1, 31);
-    set_win_tile_xy(19, 2, 31);
-    set_win_tile_xy(19, 3, 35);
-
-    FOR(1, 19)
-    {
-        set_win_tile_xy(i, 0, 37);
-        set_win_tile_xy(19 - i, 3, 36);
-    }
-}
 
 
 void update_display_score()
@@ -141,20 +112,34 @@ void add_score()
 
 void main()
 {
-    ENABLE_RAM_MBC1;
-    setup();
-    while (1)
-    {
-        update();
-        perform_delay(2);
-    }
-    DISABLE_RAM_MBC1;
+
+    do {
+        ENABLE_RAM_MBC1;
+        setup();
+        while (is_playing)
+        {
+            update();
+            perform_delay(2);
+        }
+        DISABLE_RAM_MBC1;
+        is_playing = true;
+    } while (1);
+
+
 }
 
 void setup()
 {
+
     // Init sprite ids array
-    FOR_FROM_ZERO_TO(40) sprite_ids[i] = false;
+    FOR_FROM_ZERO_TO(40) {sprite_ids[i] = false; move_sprite(i, 168, 0); }
+
+    FOR_I(0, num_pipe_cols) {
+        FOR_J(0, 6) {
+            columns[i].pipes[j].x = 168;
+            columns[i].pipes[j].y = 0;
+        }
+    }
 
     FOR_FROM_ZERO_TO(num_pipe_cols)
     {
@@ -180,7 +165,7 @@ void setup()
     state = WAITING_TO_START;
 
     // Setup Background
-    set_bkg_data(0, 38, bkgs);
+    set_bkg_data(0, 44, bkgs);
     set_bkg_tiles(0, 0, 32, 18, tilemap);
 
     // Load Sprites
@@ -189,7 +174,7 @@ void setup()
     setup_player();
 
 
-    setup_win();
+    setup_win_before_game();
 
     SHOW_BKG;
     SHOW_SPRITES;
@@ -201,10 +186,11 @@ bool create_new_one = false;
 void update()
 {
 
-    update_display_score();
+    if (state == DEAD) { is_playing = false; return;}
 
     if (state != WAITING_TO_START)
     {
+        update_display_score();
         if (step_counter == step_limit)
         {
             INT8 index = get_next_slot_col_pipe_available();
@@ -238,7 +224,10 @@ void update()
                         FOR_FROM_ZERO_TO(4)
                         session_highscore[i] = score[i];
                     }
-                    break;
+                           delay(300);
+
+                   printf("ERROR");
+              
                 }
 
                 // Move active columns
@@ -279,6 +268,10 @@ void update()
             FOR_FROM_ZERO_TO(4)
             session_highscore[i] = score[i];
         }
+
+        //delay(300);
+
+        printf("ERROR");
     }
 
     if (state == JUMPING)
@@ -309,6 +302,7 @@ void update()
         if (joypad() == J_UP)
         {
             state = FALLING;
+            setup_win_in_game(session_highscore);
         }
         else
         {

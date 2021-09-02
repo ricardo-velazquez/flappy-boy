@@ -1,6 +1,6 @@
 REM Automatically generated from Makefile
-del dist /Q
-mkdir dist
+REM del dist /Q
+REM mkdir dist
 C:\gbdk\bin\lcc -Wa-l -Wf-ba0 -c -o dist/savevars.o src/savevars.c
 C:\gbdk\bin\lcc -Wa-l -c -o dist/main.o src/main.c
 C:\gbdk\bin\lcc -Wa-l -c -o dist/gb_helpers.o src/gb_helpers.c
