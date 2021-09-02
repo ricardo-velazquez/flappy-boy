@@ -3,6 +3,7 @@
         "sprites.h": "c",
         "bkgs.h": "c",
         "tilemap.h": "c",
-        "player.h": "c"
+        "player.h": "c",
+        "macros.h": "c"
     }
 }
