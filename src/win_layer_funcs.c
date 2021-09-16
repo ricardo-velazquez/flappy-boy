@@ -61,3 +61,56 @@ void setup_win_in_game(UINT8 *session_highscore)
     FOR_FROM_ZERO_TO(4)
     set_win_tile_xy(3 + (i + 1), 2, 12 + session_highscore[(4 - i - 1)]);
 }
+
+void fadeout()
+{
+    wait_vbl_done();
+
+    for (UINT8 i = 0; i != 4; i++)
+    {
+        switch (i)
+        {
+        case 0:
+            BGP_REG = 0xE4;
+            OBP0_REG = 0xE4;
+            break;
+        case 1:
+            BGP_REG = 0xF9;
+            OBP0_REG = 0xF9;
+            break;
+        case 2:
+            BGP_REG = 0xFE;
+            OBP0_REG = 0xFE;
+            break;
+        case 3:
+            BGP_REG = 0xFF;
+            OBP0_REG = 0xFF;
+            break;
+        }
+        delay(100);
+    }
+}
+
+void fadein()
+{
+    wait_vbl_done();
+    for (UINT8 i = 1; i != 4; i++)
+    {
+        switch (i)
+        {
+        case 1:
+            BGP_REG = 0xFE;
+            OBP0_REG = 0xFE;
+            break;
+        case 2:
+            BGP_REG = 0xF9;
+            OBP0_REG = 0xF9;
+            break;
+        case 3:
+            BGP_REG = 0xE4;
+            OBP0_REG = 0xE4;
+            break;
+        }
+        delay(100);
+    }
+}

@@ -51,6 +51,8 @@ void perform_delay(UINT8 times)
 void setup()
 {
 
+    fadeout();
+   
     // Init sprite ids array
     FOR_FROM_ZERO_TO(40)
     {
@@ -84,6 +86,8 @@ void setup()
     SHOW_SPRITES;
     SHOW_WIN;
     DISPLAY_ON;
+
+     fadein();
 }
 
 void update()
