@@ -10,4 +10,5 @@ This is flappy bird clone made for old GameBoy console. it is made with C and GB
 
 # Screenshots
 
-TODO
+![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
+
