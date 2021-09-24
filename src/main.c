@@ -16,6 +16,7 @@
 // Modules
 #include "win_layer_funcs.c"
 #include "score_funcs.c"
+#include "sound_funcs.c"
 #include "entities/player.c"
 #include "entities/pipes.c"
 
@@ -50,9 +51,9 @@ void perform_delay(UINT8 times)
 
 void setup()
 {
-
+    setup_sound();
     fadeout();
-   
+
     // Init sprite ids array
     FOR_FROM_ZERO_TO(40)
     {
@@ -87,7 +88,7 @@ void setup()
     SHOW_WIN;
     DISPLAY_ON;
 
-     fadein();
+    fadein();
 }
 
 void update()
@@ -132,9 +133,10 @@ void update()
                     if (raw_current_score > raw_highscore)
                     {
                         FOR_FROM_ZERO_TO(4)
-                        session_highscore[i] = score[i];
+                            session_highscore[i] = score[i];
                     }
-                    delay(300);
+                    delay(500);
+
                 }
 
                 // Move active columns
@@ -148,6 +150,7 @@ void update()
             if (columns[i].is_scored == false && columns[i].is_created == true && player.x - 4 > columns[i].pipes[0].x) // Not visible
             {
                 columns[i].is_scored = true;
+                play_sound_add_score();
                 add_score();
             }
 
@@ -219,7 +222,6 @@ void update()
     }
 }
 
-
 INT8 get_next_available()
 {
     INT8 next_available = -1;
@@ -234,4 +236,3 @@ INT8 get_next_available()
     }
     return next_available;
 }
-
