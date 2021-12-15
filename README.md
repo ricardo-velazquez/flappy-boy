@@ -1,5 +1,5 @@
 # Flappy Boy
-This is flappy bird clone made for old GameBoy console. it is made with C and GBDK library. I hope this can be a helpful example for those ones who are starting witg Homebrew GameBoy development.
+This is flappy bird clone made for the old GameBoy console. it is made with C and the GBDK library. I hope this can be a helpful example for those ones who are starting with some homebrew GameBoy development.
 
 # How to build it
 - Download the lastest binaries of GBDK
@@ -11,7 +11,6 @@ This is flappy bird clone made for old GameBoy console. it is made with C and GB
 # Screenshots
 
 ![Screenshot 1](https://github.com/ricardo-velazquez/flappy-boy/blob/master/screenshots/screen1.png?raw=true)
-
 
 ![Screenshot 1](https://github.com/ricardo-velazquez/flappy-boy/blob/master/screenshots/screen2.png?raw=true)
 
