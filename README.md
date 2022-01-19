@@ -6,7 +6,7 @@ This is flappy bird clone made for the old GameBoy console. it is made with C an
 - Modify the run.bat file in the root directory to match the directory on your system where you downloaded GBDK
 - Remove the last line and save it
 - run the run.bat file
-- A fist folder is going to be created with the ROM
+- A first folder is going to be created with the ROM
 
 # Screenshots
 
